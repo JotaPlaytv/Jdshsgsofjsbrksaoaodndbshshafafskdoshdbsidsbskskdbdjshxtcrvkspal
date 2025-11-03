@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JotaPlay">
+    <title>JotaPlay - Downloader de Séries</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .screen {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #7c3aed 0%, #1e3a8a 50%, #4338ca 100%);
+            padding: 20px;
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            color: white;
+        }
+
+        .btn {
+            background: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            background: #e0f2fe;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-icon {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .home-screen {
+            align-items: center;
+            justify-content: center;
+        }
+
+        .home-content {
+            text-align: center;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: #bfdbfe;
+            margin-bottom: 40px;
+        }
+
+        .features {
+            margin-top: 60px;
+            color: #bfdbfe;
+        }
+
+        .features p {
+            margin: 8px 0;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 16px 16px 50px;
+            border-radius: 20px;
+            border: none;
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 18px;
+            color: #9ca3af;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .card:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .card.selected {
+            background: #3b82f6;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            color: #bfdbfe;
+            font-size: 14px;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .episode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .episode-btn {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .episode-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .episode-btn.selected {
+            background: #3b82f6;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #7c3aed, #1e3a8a);
+            padding: 24px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            color: white;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .settings-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 14px;
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+
+        .info-box {
+            background: rgba(255,255,255,0.05);
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            color: white;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .status-icon {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Tela Home -->
+    <div class="screen active home-screen" id="homeScreen">
+        <button class="btn-icon settings-icon" onclick="showSettings()">⚙️</button>
+        <div class="home-content">
+            <svg class="logo" viewBox="0 0 24 24" fill="white">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
+            <h1 class="title">JotaPlay</h1>
+            <p class="subtitle">Downloader de Séries</p>
+            <button class="btn" onclick="loadCatalog()" id="loadBtn">
+                <span id="loadIcon">▶</span>
+                <span id="loadText">Começar</span>
+            </button>
+            <div class="features">
+                <p>✨ Busca inteligente</p>
+                <p>📺 Seleção por temporada</p>
+                <p>🎯 Escolha episódios específicos</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela Busca -->
+    <div class="screen" id="searchScreen">
+        <div class="container">
+            <div class="header">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <h1 style="font-size: 28px; font-weight: bold;">JotaPlay</h1>
+            </div>
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="Buscar série..." oninput="searchSeries()">
+            </div>
+            <div id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Tela Temporadas -->
+    <div class="screen" id="seasonsScreen">
+        <div class="container">
+            <button class="btn-icon" onclick="goToSearch()" style="margin-bottom: 16px;">←</button>
+            <h2 style="color: white; font-size: 24px; margin-bottom: 8px;" id="seriesTitle"></h2>
+            <p style="color: #bfdbfe; margin-bottom: 24px;">Selecione as temporadas</p>
+            <div id="seasonsList"></div>
+            <button class="btn" onclick="goToEpisodes()" style="margin-top: 24px;">
+                Continuar (<span id="seasonCount">0</span> temporada<span id="seasonPlural">s</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- Tela Episódios -->
+    <div class="screen" id="episodesScreen">
+        <div class="container">
+            <button class="btn-icon" onclick="goToSeasons()" style="margin-bottom: 16px;">←</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <div>
+                    <h2 style="color: white; font-size: 24px;" id="seriesTitle2"></h2>
+                    <p style="color: #bfdbfe;">Selecione os episódios</p>
+                </div>
+                <button class="btn-secondary" style="padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;" onclick="selectAllEpisodes()">
+                    Todos
+                </button>
+            </div>
+            <div id="episodesList"></div>
+            <button class="btn" onclick="goToAudio()" style="margin-top: 24px;">
+                Continuar (<span id="episodeCount">0</span> episódio<span id="episodePlural">s</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- Tela Áudio -->
+    <div class="screen" id="audioScreen">
+        <div class="container" style="justify-content: center;">
+            <button class="btn-icon" onclick="goToEpisodes()" style="margin-bottom: 24px;">←</button>
+            <h2 style="color: white; font-size: 24px; text-align: center; margin-bottom: 24px;">Tipo de Áudio</h2>
+            <div id="audioOptions"></div>
+        </div>
+    </div>
+
+    <!-- Tela Download -->
+    <div class="screen" id="downloadScreen">
+        <div class="container">
+            <h2 style="color: white; font-size: 24px; margin-bottom: 8px;">Baixando</h2>
+            <p style="color: #bfdbfe; margin-bottom: 24px;" id="downloadStatus"></p>
+            <div id="downloadList"></div>
+            <button class="btn" onclick="resetApp()" id="finishBtn" style="margin-top: 24px; display: none;">
+                Concluído - Voltar ao Início
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Configurações -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="font-size: 24px;">⚙️ Configurações</h2>
+                <button class="close-btn" onclick="hideSettings()">✕</button>
+            </div>
+            <div>
+                <label style="color: white; display: block; margin-bottom: 8px; font-weight: 600;">
+                    📡 URL da Lista M3U
+                </label>
+                <input type="text" id="m3uInput" placeholder="Cole a URL da sua lista M3U">
+                <p style="color: #bfdbfe; font-size: 12px; margin-top: 8px;">
+                    💡 Cole aqui a URL da sua lista M3U personalizada
+                </p>
+            </div>
+            <div class="btn-group">
+                <button class="btn" style="flex: 1; background: #3b82f6;" onclick="saveM3U()">
+                    💾 Salvar
+                </button>
+                <button class="btn btn-secondary" style="flex: 1;" onclick="resetM3U()">
+                    🔄 Restaurar
+                </button>
+            </div>
+            <div class="info-box">
+                <strong>ℹ️ Como usar:</strong><br>
+                1. Cole a URL da sua lista M3U<br>
+                2. Clique em "Salvar"<br>
+                3. Volte ao início e carregue o catálogo
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_M3U = "http://dns012.click/get.php?username=598072665&password=380888327&type=m3u_plus&output=mpegts";
+        
+        let catalog = null;
+        let selectedSeries = null;
+        let selectedSeasons = [];
+        let selectedEpisodes = [];
+        let audioType = 'all';
+
+        // Carregar URL salva
+        function getM3UUrl() {
+            return localStorage.getItem('jotaplay_m3u') || DEFAULT_M3U;
+        }
+
+        // Modal Configurações
+        function showSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+            document.getElementById('m3uInput').value = localStorage.getItem('jotaplay_m3u') || '';
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function saveM3U() {
+            const url = document.getElementById('m3uInput').value.trim();
+            if (url) {
+                localStorage.setItem('jotaplay_m3u', url);
+                alert('✅ Lista M3U salva com sucesso!');
+                hideSettings();
+                catalog = null;
+            } else {
+                alert('❌ Digite uma URL válida!');
+            }
+        }
+
+        function resetM3U() {
+            localStorage.removeItem('jotaplay_m3u');
+            document.getElementById('m3uInput').value = '';
+            alert('✅ Lista padrão restaurada!');
+            hideSettings();
+            catalog = null;
+        }
+
+        // Carregar catálogo
+        async function loadCatalog() {
+            const btn = document.getElementById('loadBtn');
+            const icon = document.getElementById('loadIcon');
+            const text = document.getElementById('loadText');
+            
+            btn.disabled = true;
+            icon.innerHTML = '⏳';
+            icon.classList.add('spinner');
+            text.textContent = 'Carregando...';
+
+            try {
+                const response = await fetch(getM3UUrl());
+                const content = await response.text();
+                catalog = parseCatalog(content);
+                
+                showScreen('searchScreen');
+            } catch (error) {
+                alert('❌ Erro ao carregar: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                icon.innerHTML = '▶';
+                icon.classList.remove('spinner');
+                text.textContent = 'Começar';
+            }
+        }
+
+        // Parse M3U
+        function parseCatalog(content) {
+            const regex = /#EXTINF:-1.*?tvg-name="([^"]*?)\s+S(\d{1,2})E(\d{1,2})".*?\n(.*?\/series\/.*?\.(mp4|mkv))/gi;
+            const series = {};
+            let match;
+
+            while ((match = regex.exec(content)) !== null) {
+                const [, fullName, season, episode, link] = match;
+                const cleanName = fullName.replace(/\s+S\d{1,2}E\d{1,2}.*$/, '').trim();
+                const isLeg = fullName.includes('[L]');
+
+                if (!series[cleanName]) {
+                    series[cleanName] = { name: cleanName, episodes: [] };
+                }
+
+                series[cleanName].episodes.push({
+                    season: parseInt(season),
+                    episode: parseInt(episode),
+                    link,
+                    legendado: isLeg
+                });
+            }
+
+            Object.values(series).forEach(s => {
+                s.episodes.sort((a, b) => a.season - b.season || a.episode - b.episode);
+            });
+
+            return series;
+        }
+
+        // Buscar séries
+        function searchSeries() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const results = document.getElementById('searchResults');
+            
+            if (!term || !catalog) {
+                results.innerHTML = '';
+                return;
+            }
+
+            const matches = Object.values(catalog)
+                .filter(s => s.name.toLowerCase().includes(term))
+                .slice(0, 10);
+
+            if (matches.length === 0) {
+                results.innerHTML = `
+                    <div style="text-align: center; color: rgba(255,255,255,0.6); margin-top: 60px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🎬</div>
+                        <p>Nenhuma série encontrada</p>
+                    </div>
+                `;
+                return;
+            }
+
+            results.innerHTML = matches.map(series => `
+                <div class="card" onclick="selectSeries('${series.name}')">
+                    <div class="card-title">${series.name}</div>
+                    <div class="card-subtitle">${series.episodes.length} episódios disponíveis</div>
+                </div>
+            `).join('');
+        }
+
+        // Selecionar série
+        function selectSeries(name) {
+            selectedSeries = catalog[name];
+            document.getElementById('seriesTitle').textContent = name;
+            document.getElementById('seriesTitle2').textContent = name;
+            renderSeasons();
+            showScreen('seasonsScreen');
+        }
+
+        // Renderizar temporadas
+        function renderSeasons() {
+            const seasons = {};
+            selectedSeries.episodes.forEach(ep => {
+                if (!seasons[ep.season]) {
+                    seasons[ep.season] = { total: 0, dub: 0, leg: 0 };
+                }
+                seasons[ep.season].total++;
+                if (ep.legendado) seasons[ep.season].leg++;
+                else seasons[ep.season].dub++;
+            });
+
+            const list = document.getElementById('seasonsList');
+            list.innerHTML = Object.entries(seasons)
+                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+                .map(([num, info]) => `
+                    <div class="card ${selectedSeasons.includes(parseInt(num)) ? 'selected' : ''}" 
+                         onclick="toggleSeason(${num})">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div class="card-title">Temporada ${num}</div>
+                                <div class="card-subtitle">${info.total} eps (${info.dub} dub, ${info.leg} leg)</div>
+                            </div>
+                            ${selectedSeasons.includes(parseInt(num)) ? '✓' : ''}
+                        </div>
+                    </div>
+                `).join('');
+            
+            updateSeasonCount();
+        }
+
+        function toggleSeason(num) {
+            const idx = selectedSeasons.indexOf(num);
+            if (idx > -1) {
+                selectedSeasons.splice(idx, 1);
+            } else {
+                selectedSeasons.push(num);
+            }
+            renderSeasons();
+        }
+
+        function updateSeasonCount() {
+            const count = selectedSeasons.length;
+            document.getElementById('seasonCount').textContent = count;
+            document.getElementById('seasonPlural').textContent = count === 1 ? '' : 's';
+        }
+
+        function goToEpisodes() {
+            if (selectedSeasons.length === 0) {
+                alert('❌ Selecione pelo menos uma temporada!');
+                return;
+            }
+            renderEpisodes();
+            showScreen('episodesScreen');
+        }
+
+        // Renderizar episódios
+        function renderEpisodes() {
+            const episodes = selectedSeries.episodes.filter(ep => 
+                selectedSeasons.includes(ep.season)
+            );
+
+            const grouped = {};
+            episodes.forEach(ep => {
+                if (!grouped[ep.season]) grouped[ep.season] = [];
+                grouped[ep.season].push(ep);
+            });
+
+            const list = document.getElementById('episodesList');
+            list.innerHTML = Object.entries(grouped)
+                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+                .map(([season, eps]) => `
+                    <div class="card">
+                        <h3 style="margin-bottom: 12px;">Temporada ${season}</h3>
+                        <div class="episode-grid">
+                            ${eps.map(ep => {
+                                const id = `${ep.season}-${ep.episode}`;
+                                return `
+                                    <button class="episode-btn ${selectedEpisodes.includes(id) ? 'selected' : ''}"
+                                            onclick="toggleEpisode('${id}')">
+                                        <div style="font-weight: 600;">E${ep.episode.toString().padStart(2, '0')}</div>
+                                        <div style="font-size: 11px; opacity: 0.8;">${ep.legendado ? '[L]' : '[D]'}</div>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            
+            updateEpisodeCount();
+        }
+
+        function toggleEpisode(id) {
+            const idx = selectedEpisodes.indexOf(id);
+            if (idx > -1) {
+                selectedEpisodes.splice(idx, 1);
+            } else {
+                selectedEpisodes.push(id);
+            }
+            renderEpisodes();
+        }
+
+        function selectAllEpisodes() {
+            const episodes = selectedSeries.episodes.filter(ep => 
+                selectedSeasons.includes(ep.season)
+            );
+            selectedEpisodes = episodes.map(ep => `${ep.season}-${ep.episode}`);
+            renderEpisodes();
+        }
+
+        function updateEpisodeCount() {
+            const count = selectedEpisodes.length;
+            document.getElementById('episodeCount').textContent = count;
+            document.getElementById('episodePlural').textContent = count === 1 ? '' : 's';
+        }
+
+        function goToAudio() {
+            if (selectedEpisodes.length === 0) {
+                alert('❌ Selecione pelo menos um episódio!');
+                return;
+            }
+            renderAudioOptions();
+            showScreen('audioScreen');
+        }
+
+        // Renderizar opções de áudio
+        function renderAudioOptions() {
+            const episodes = selectedSeries.episodes.filter(ep => {
+                const id = `${ep.season}-${ep.episode}`;
+                return selectedEpisodes.includes(id);
+            });
+
+            const dub = episodes.filter(e => !e.legendado).length;
+            const leg = episodes.filter(e => e.legendado).length;
+            const total = episodes.length;
+
+            const options = document.getElementById('audioOptions');
+            options.innerHTML = `
+                <div class="card ${audioType === 'all' ? 'selected' : ''}" onclick="audioType='all'; renderAudioOptions();" style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 18px;">Todos</div>
+                            <div style="opacity: 0.8;">${total} episódios</div>
+                        </div>
+                        ${audioType === 'all' ? '✓' : ''}
+                    </div>
+                </div>
+                ${dub > 0 ? `
+                    <div class="card ${audioType === 'dub' ? 'selected' : ''}" onclick="audioType='dub'; renderAudioOptions();" style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; font-size: 18px;">Dublado</div>
+                                <div style="opacity: 0.8;">${dub} episódios</div>
+                            </div>
+                            ${audioType === 'dub' ? '✓' : ''}
+                        </div>
+                    </div>
+                ` : ''}
+                ${leg > 0 ? `
+                    <div class="card ${audioType === 'leg' ? 'selected' : ''}" onclick="audioType='leg'; renderAudioOptions();" style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; font-size: 18px;">Legendado</div>
+                                <div style="opacity: 0.8;">${leg} episódios</div>
+                            </div>
+                            ${audioType === 'leg' ? '✓' : ''}
+                        </div>
+                    </div>
+                ` : ''}
+                <button class="btn" onclick="startDownload()" style="width: 100%; margin-top: 24px;">
+                    📥 Iniciar Download
+                </button>
+            `;
+        }
+
+        // Download
+        async function startDownload() {
+            const episodes = selectedSeries.episodes.filter(ep => {
+                const id = `${ep.season}-${ep.episode}`;
+                const inSelection = selectedEpisodes.includes(id);
+                const matchesAudio = 
+                    audioType === 'all' ||
+                    (audioType === 'dub' && !ep.legendado) ||
+                    (audioType === 'leg' && ep.legendado);
+                return inSelection && matchesAudio;
+            });
+
+            if (episodes.length === 0) {
+                alert('❌ Nenhum episódio corresponde aos filtros!');
+                return;
+            }
+
+            showScreen('downloadScreen');
+            const list = document.getElementById('downloadList');
+            const status = document.getElementById('downloadStatus');
+            
+            let completed = 0;
+            let errors = 0;
+
+            for (let i = 0; i < episodes.length; i++) {
+                const ep = episodes[i];
+                const id = `download-${i}`;
+                
+                list.innerHTML += `
+                    <div class="card" id="${id}">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600;">T${ep.season}E${ep.episode.toString().padStart(2, '0')} ${ep.legendado ? '[L]' : '[D]'}</div>
+                            </div>
+                            <span class="spinner">⏳</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%" id="${id}-progress"></div>
+                        </div>
+                    </div>
+                `;
+
+                try {
+                    // Simula download com progresso
+                    await downloadWithProgress(ep.link, (progress) => {
+                        const progressBar = document.getElementById(`${id}-progress`);
+                        if (progressBar) {
+                            progressBar.style.width = progress + '%';
+                        }
+                    });
+
+                    document.getElementById(id).innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600;">T${ep.season}E${ep.episode.toString().padStart(2, '0')} ${ep.legendado ? '[L]' : '[D]'}</div>
+                            </div>
+                            <span style="color: #4ade80;">✓</span>
+                        </div>
+                    `;
+                    completed++;
+                } catch (error) {
+                    document.getElementById(id).innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600;">T${ep.season}E${ep.episode.toString().padStart(2, '0')} ${ep.legendado ? '[L]' : '[D]'}</div>
+                                <div style="font-size: 12px; color: #fca5a5;">Erro: ${error.message}</div>
+                            </div>
+                            <span style="color: #f87171;">✗</span>
+                        </div>
+                    `;
+                    errors++;
+                }
+
+                status.textContent = `${completed}/${episodes.length} episódios • ${errors} erro${errors !== 1 ? 's' : ''}`;
+            }
+
+            document.getElementById('finishBtn').style.display = 'block';
+        }
+
+        // Simula download (substitua por fetch real se necessário)
+        function downloadWithProgress(url, onProgress) {
+            return new Promise((resolve, reject) => {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 25;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        onProgress(100);
+                        // Simula sucesso (90% de chance)
+                        if (Math.random() > 0.1) {
+                            setTimeout(() => resolve(), 200);
+                        } else {
+                            setTimeout(() => reject(new Error('Conexão perdida')), 200);
+                        }
+                    } else {
+                        onProgress(progress);
+                    }
+                }, 400);
+            });
+        }
+
+        // Navegação
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function goToSearch() {
+            selectedSeasons = [];
+            selectedEpisodes = [];
+            showScreen('searchScreen');
+        }
+
+        function goToSeasons() {
+            selectedEpisodes = [];
+            showScreen('seasonsScreen');
+        }
+
+        function goToEpisodes() {
+            showScreen('episodesScreen');
+        }
+
+        function resetApp() {
+            selectedSeries = null;
+            selectedSeasons = [];
+            selectedEpisodes = [];
+            audioType = 'all';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('downloadList').innerHTML = '';
+            document.getElementById('finishBtn').style.display = 'none';
+            showScreen('searchScreen');
+        }
+
+        // Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(function(registration) {
+                        console.log('✅ Service Worker registrado:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('❌ Erro ao registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+  "name": "JotaPlay - Downloader de Séries",
+  "short_name": "JotaPlay",
+  "description": "Baixe suas séries favoritas de forma simples e rápida",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e3a8a",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%237c3aed'/%3E%3Cpath d='M60 40v112l84-56z' fill='white'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%237c3aed'/%3E%3Cpath d='M160 106v300l224-150z' fill='white'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Buscar Séries",
+      "short_name": "Buscar",
+      "description": "Buscar e baixar séries",
+      "url": "/",
+      "icons": []
+    }
+  ]
+}
