@@ -1,0 +1,183 @@
+<!--
+FINANCE CONTROL 💰🚀
+Arquivos inclusos neste artifact:
+1) index.html (este arquivo)
+2) manifest.json (copie a seção correspondente)
+3) sw.js (copie a seção correspondente)
+--><!DOCTYPE html><html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance Control</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#00c853" />
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --card: #1c1c1c;
+      --green: #00c853;
+      --red: #d50000;
+      --text: #e0e0e0;
+    }
+    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+    body { margin:0; background:var(--bg); color:var(--text); }
+    header { padding:16px; text-align:center; font-size:1.4rem; font-weight:bold; }
+    .container { padding:16px; max-width:900px; margin:auto; }
+    .card { background:var(--card); padding:16px; border-radius:12px; margin-bottom:16px; }
+    .flex { display:flex; gap:12px; flex-wrap:wrap; }
+    .flex > div { flex:1; min-width:200px; }
+    h2 { margin-top:0; }
+    input, select, button {
+      width:100%; padding:10px; border-radius:8px; border:none; margin-top:6px;
+    }
+    button { cursor:pointer; font-weight:bold; }
+    .btn-green { background:var(--green); color:#000; }
+    .btn-red { background:var(--red); color:#fff; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:8px; border-bottom:1px solid #333; text-align:left; }
+    .positive { color:var(--green); }
+    .negative { color:var(--red); }
+    footer { text-align:center; font-size:0.8rem; opacity:0.6; padding:12px; }
+  </style>
+</head>
+<body>
+<header>💰 FINANCE CONTROL 🚀</header>
+<div class="container">  <!-- DASHBOARD -->  <div class="card flex">
+    <div>
+      <h2>📊 Ganhos</h2>
+      <p id="totalGanhos" class="positive">R$ 0,00</p>
+    </div>
+    <div>
+      <h2>📉 Despesas</h2>
+      <p id="totalDespesas" class="negative">R$ 0,00</p>
+    </div>
+    <div>
+      <h2>💰 Saldo</h2>
+      <p id="saldo">R$ 0,00</p>
+    </div>
+  </div>  <!-- CADASTRO -->  <div class="card">
+    <h2>➕ Nova Transação</h2>
+    <select id="tipo">
+      <option value="ganho">Ganho</option>
+      <option value="despesa">Despesa</option>
+    </select>
+    <input id="descricao" placeholder="Descrição" />
+    <input id="valor" type="number" placeholder="Valor" />
+    <select id="categoria"></select>
+    <input id="data" type="date" />
+    <button class="btn-green" onclick="addTransacao()">Salvar</button>
+  </div>  <!-- LISTAGEM -->  <div class="card">
+    <h2>📋 Lançamentos do Mês</h2>
+    <button class="btn-green" onclick="gerarPDF()">📄 Gerar Relatório PDF</button>
+    <table>
+      <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
+      <tbody id="lista"></tbody>
+    </table>
+  </div></div>
+<footer>PWA • Dark Mode • Compartilhe com sua esposa ❤️</footer><script>
+// ===== PDF =====
+function gerarPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y = 10;
+
+  doc.setFontSize(16);
+  doc.text('Finance Control - Relatório Mensal', 10, y);
+  y+=10;
+
+  doc.setFontSize(12);
+  doc.text(`Ganhos: ${totalGanhos.textContent}`,10,y); y+=6;
+  doc.text(`Despesas: ${totalDespesas.textContent}`,10,y); y+=6;
+  doc.text(`Saldo: ${saldo.textContent}`,10,y); y+=10;
+
+  doc.text('Transações:',10,y); y+=6;
+
+  transacoes.forEach(t=>{
+    doc.text(`${t.data} | ${t.descricao} | ${t.categoria} | R$ ${t.valor.toFixed(2)}`,10,y);
+    y+=6;
+    if(y>280){ doc.addPage(); y=10; }
+  });
+
+  doc.text(`Gerado em: ${new Date().toLocaleDateString()}`,10,280);
+  doc.save('finance-control.pdf');
+}
+
+const categorias = {
+  ganho: ['Salário','IPTV','Freelance','Outros'],
+  despesa: ['Aluguel','Luz','Água','Internet','Alimentação','Transporte','Saúde','Lazer','Outros']
+};
+
+let transacoes = JSON.parse(localStorage.getItem('transacoes')||'[]');
+
+function carregarCategorias(){
+  const tipo=document.getElementById('tipo').value;
+  const sel=document.getElementById('categoria');
+  sel.innerHTML='';
+  categorias[tipo].forEach(c=>{
+    const o=document.createElement('option'); o.textContent=c; sel.appendChild(o);
+  });
+}
+
+document.getElementById('tipo').onchange=carregarCategorias;
+carregarCategorias();
+
+function addTransacao(){
+  const t={
+    tipo:tipo.value,
+    descricao:descricao.value,
+    valor:parseFloat(valor.value),
+    categoria:categoria.value,
+    data:data.value,
+    pago:true
+  };
+  if(!t.valor||!t.data) return alert('Preencha valor e data');
+  transacoes.push(t);
+  localStorage.setItem('transacoes',JSON.stringify(transacoes));
+  render();
+}
+
+function render(){
+  const lista=document.getElementById('lista');
+  lista.innerHTML='';
+  let ganhos=0, despesas=0;
+  transacoes.forEach((t,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${t.data}</td><td>${t.descricao}</td><td>${t.categoria}</td><td class="${t.tipo==='ganho'?'positive':'negative'}">R$ ${t.valor.toFixed(2)}</td><td><button onclick="del(${i})">❌</button></td>`;
+    lista.appendChild(tr);
+    t.tipo==='ganho'?ganhos+=t.valor:despesas+=t.valor;
+  });
+  totalGanhos.textContent='R$ '+ganhos.toFixed(2);
+  totalDespesas.textContent='R$ '+despesas.toFixed(2);
+  const s=ganhos-despesas;
+  saldo.textContent='R$ '+s.toFixed(2);
+  saldo.className=s>=0?'positive':'negative';
+}
+
+function del(i){ transacoes.splice(i,1); localStorage.setItem('transacoes',JSON.stringify(transacoes)); render(); }
+
+render();
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
+</script></body>
+</html><!-- ================= manifest.json =================
+{
+  "name": "Finance Control",
+  "short_name": "Finance",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#00c853",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
+--><!-- ================= sw.js =================
+const cacheName='finance-control-v1';
+self.addEventListener('install',e=>{
+  e.waitUntil(caches.open(cacheName).then(c=>c.addAll(['./'])));
+});
+self.addEventListener('fetch',e=>{
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+});
+-->
