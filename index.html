@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="description" content="Sistema de Controle Financeiro Pessoal">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <title>Controle Financeiro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .backup-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .card-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .income { color: #4ade80; }
+        .expense { color: #f87171; }
+        .balance { color: #fbbf24; }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input, select, button {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1em;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        input:focus, select:focus {
+            border-color: #fbbf24;
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-income {
+            background: #22c55e;
+            border-color: #22c55e;
+        }
+
+        .btn-expense {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .btn-delete {
+            background: #f97316;
+            border-color: #f97316;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-backup {
+            background: #8b5cf6;
+            border-color: #8b5cf6;
+        }
+
+        .btn-import {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .transactions {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .transactions h2 {
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .transaction-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .transaction-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .transaction-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .transaction-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+        .transaction-info h4 {
+            margin-bottom: 5px;
+        }
+
+        .transaction-info p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+
+        .transaction-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .transaction-amount {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.2em;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-content h3 {
+            font-size: 2em;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        .eye-btn {
+            background: transparent;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .controls-row {
+                flex-direction: column;
+            }
+
+            .input-group {
+                width: 100%;
+            }
+
+            input, select, button {
+                width: 100%;
+            }
+
+            .transaction-item {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .transaction-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .backup-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Controle Financeiro</h1>
+            <p>Gerencie suas finanças com inteligência</p>
+            <div class="backup-buttons">
+                <button class="btn-backup" onclick="exportData()">
+                    <span>💾</span> Exportar Backup
+                </button>
+                <button class="btn-import" onclick="document.getElementById('fileInput').click()">
+                    <span>📥</span> Importar Backup
+                </button>
+                <input type="file" id="fileInput" accept=".json" class="hidden" onchange="importData(event)">
+            </div>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title income">Receitas</span>
+                    <span>📈</span>
+                </div>
+                <div class="card-value income" id="totalIncome">R$ 0,00</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title expense">Despesas</span>
+                    <span>📉</span>
+                </div>
+                <div class="card-value expense" id="totalExpense">R$ 0,00</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title balance">Saldo</span>
+                    <button class="eye-btn" id="toggleBalance" onclick="toggleBalanceVisibility()">👁️</button>
+                </div>
+                <div class="card-value balance" id="balance">R$ 0,00</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="controls-row">
+                <div class="input-group">
+                    <span>📅</span>
+                    <input type="month" id="monthFilter">
+                </div>
+
+                <div class="input-group">
+                    <span>🔍</span>
+                    <select id="typeFilter" onchange="loadTransactions()">
+                        <option value="all">Todas</option>
+                        <option value="income">Receitas</option>
+                        <option value="expense">Despesas</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <button class="btn-income" onclick="openModal('income')">
+                        <span>➕</span> Receita
+                    </button>
+                    <button class="btn-expense" onclick="openModal('expense')">
+                        <span>➕</span> Despesa
+                    </button>
+                    <button class="btn-delete" onclick="deleteMonth()">
+                        <span>🗑️</span> Limpar Mês
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="transactions">
+            <h2>Transações</h2>
+            <div id="transactionsList"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Nova Transação</h3>
+            <form onsubmit="addTransaction(event)">
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="description" placeholder="Ex: Salário, Aluguel..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Valor</label>
+                    <input type="number" id="amount" step="0.01" placeholder="0.00" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="category" required>
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="date" required>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="submitBtn">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let transactions = [];
+        let currentType = 'expense';
+        let showBalance = true;
+
+        const categories = {
+            expense: ['Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Lazer', 'Educação', 'Outros'],
+            income: ['Salário', 'Freelance', 'Investimentos', 'Vendas', 'Outros']
+        };
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            document.getElementById('monthFilter').value = today.toISOString().slice(0, 7);
+            document.getElementById('date').value = today.toISOString().slice(0, 10);
+            document.getElementById('monthFilter').addEventListener('change', loadTransactions);
+            loadData();
+            loadTransactions();
+        });
+
+        // Carregar dados do LocalStorage
+        function loadData() {
+            const saved = localStorage.getItem('financial-transactions');
+            if (saved) {
+                transactions = JSON.parse(saved);
+            }
+        }
+
+        // Salvar dados no LocalStorage
+        function saveData() {
+            localStorage.setItem('financial-transactions', JSON.stringify(transactions));
+        }
+
+        // EXPORTAR DADOS PARA ARQUIVO JSON
+        function exportData() {
+            const dataStr = JSON.stringify(transactions, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            const date = new Date().toISOString().slice(0, 10);
+            link.download = `financeiro-backup-${date}.json`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showAlert('✅ Backup exportado com sucesso!');
+        }
+
+        // IMPORTAR DADOS DO ARQUIVO JSON
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!Array.isArray(importedData)) {
+                        showAlert('❌ Arquivo inválido!', 'error');
+                        return;
+                    }
+
+                    const confirmImport = confirm(
+                        `Deseja importar ${importedData.length} transações?\n\n` +
+                        `Escolha:\n` +
+                        `OK = Adicionar às transações existentes\n` +
+                        `Cancelar = Não importar`
+                    );
+
+                    if (confirmImport) {
+                        // Adiciona as transações importadas às existentes
+                        transactions = [...transactions, ...importedData];
+                        saveData();
+                        loadTransactions();
+                        showAlert('✅ Dados importados com sucesso!');
+                    }
+                } catch (error) {
+                    showAlert('❌ Erro ao ler o arquivo!', 'error');
+                }
+            };
+            
+            reader.readAsText(file);
+            event.target.value = ''; // Limpa o input
+        }
+
+        // Mostrar alerta
+        function showAlert(message, type = 'success') {
+            const alert = document.createElement('div');
+            alert.className = 'alert';
+            alert.textContent = message;
+            alert.style.background = type === 'error' ? '#ef4444' : '#10b981';
+            
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        // Formatar moeda
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        // Abrir modal
+        function openModal(type) {
+            currentType = type;
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modalTitle');
+            const submitBtn = document.getElementById('submitBtn');
+            const categorySelect = document.getElementById('category');
+
+            modalTitle.textContent = type === 'income' ? 'Nova Receita' : 'Nova Despesa';
+            submitBtn.textContent = 'Adicionar';
+            submitBtn.className = type === 'income' ? 'btn-income' : 'btn-expense';
+
+            categorySelect.innerHTML = '<option value="">Selecione...</option>';
+            categories[type].forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+
+            modal.classList.add('active');
+        }
+
+        // Fechar modal
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('description').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('category').value = '';
+            document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+        }
+
+        // Adicionar transação
+        function addTransaction(event) {
+            event.preventDefault();
+
+            const transaction = {
+                id: Date.now(),
+                type: currentType,
+                description: document.getElementById('description').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                category: document.getElementById('category').value,
+                date: document.getElementById('date').value
+            };
+
+            transactions.push(transaction);
+            saveData();
+            loadTransactions();
+            closeModal();
+            showAlert('✅ Transação adicionada!');
+        }
+
+        // Deletar transação
+        function deleteTransaction(id) {
+            if (confirm('Deseja excluir esta transação?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveData();
+                loadTransactions();
+                showAlert('✅ Transação excluída!');
+            }
+        }
+
+        // Deletar mês
+        function deleteMonth() {
+            const month = document.getElementById('monthFilter').value;
+            const monthTransactions = transactions.filter(t => t.date.startsWith(month));
+            
+            if (monthTransactions.length === 0) {
+                showAlert('❌ Nenhuma transação para excluir!', 'error');
+                return;
+            }
+
+            if (confirm(`Deseja excluir ${monthTransactions.length} transações de ${month}?`)) {
+                transactions = transactions.filter(t => !t.date.startsWith(month));
+                saveData();
+                loadTransactions();
+                showAlert('✅ Mês limpo com sucesso!');
+            }
+        }
+
+        // Carregar transações
+        function loadTransactions() {
+            const month = document.getElementById('monthFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            
+            const filtered = transactions
+                .filter(t => t.date.startsWith(month))
+                .filter(t => typeFilter === 'all' || t.type === typeFilter)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const income = transactions
+                .filter(t => t.date.startsWith(month) && t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const expense = transactions
+                .filter(t => t.date.startsWith(month) && t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const balance = income - expense;
+
+            document.getElementById('totalIncome').textContent = formatCurrency(income);
+            document.getElementById('totalExpense').textContent = formatCurrency(expense);
+            updateBalanceDisplay(balance);
+
+            const list = document.getElementById('transactionsList');
+            
+            if (filtered.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💸</div>
+                        <p>Nenhuma transação neste período</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = filtered.map(t => `
+                <div class="transaction-item">
+                    <div class="transaction-left">
+                        <div class="transaction-icon" style="background: ${t.type === 'income' ? 'rgba(74, 222, 128, 0.3)' : 'rgba(248, 113, 113, 0.3)'}">
+                            ${t.type === 'income' ? '📈' : '📉'}
+                        </div>
+                        <div class="transaction-info">
+                            <h4>${t.description}</h4>
+                            <p>${t.category} • ${new Date(t.date).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                    </div>
+                    <div class="transaction-right">
+                        <div class="transaction-amount ${t.type}">
+                            ${t.type === 'income' ? '+' : '-'} ${formatCurrency(t.amount)}
+                        </div>
+                        <button class="delete-btn" onclick="deleteTransaction(${t.id})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle visibilidade do saldo
+        function toggleBalanceVisibility() {
+            showBalance = !showBalance;
+            const month = document.getElementById('monthFilter').value;
+            const income = transactions
+                .filter(t => t.date.startsWith(month) && t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+            const expense = transactions
+                .filter(t => t.date.startsWith(month) && t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            updateBalanceDisplay(income - expense);
+            document.getElementById('toggleBalance').textContent = showBalance ? '👁️' : '🙈';
+        }
+
+        function updateBalanceDisplay(balance) {
+            const balanceElement = document.getElementById('balance');
+            balanceElement.textContent = showBalance ? formatCurrency(balance) : '••••••';
+            balanceElement.className = `card-value ${balance >= 0 ? 'income' : 'expense'}`;
+        }
+
+        // Registrar Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+    </script>
+</body>
+</html>
